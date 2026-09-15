@@ -10,7 +10,6 @@
 
     #canvas-container { display: block; }
 
-    /* HUD */
     #ui-layer { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
     .hud-text {
       position: absolute; color: #fff; text-shadow: 1px 1px 2px #000;
@@ -21,7 +20,6 @@
     #health-display { top: 10px; right: 10px; }
     #help-msg { bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 12px; opacity: .7; max-width: 90vw; text-align: center; }
 
-    /* Прицел */
     #crosshair {
       position: absolute; top: 50%; left: 50%;
       width: 34px; height: 34px;
@@ -43,18 +41,14 @@
       border-radius: 50%;
       background: rgba(255,255,255,.12);
       border: 2px solid rgba(255,255,255,.3);
-      pointer-events: none;
-      display: none;
-      z-index: 8;
+      pointer-events: none; display: none; z-index: 8;
     }
     #joystick-knob {
       position: absolute; width: 56px; height: 56px;
       border-radius: 50%;
       background: rgba(46,204,113,.6);
       border: 2px solid rgba(255,255,255,.5);
-      pointer-events: none;
-      z-index: 9;
-      display: none;
+      pointer-events: none; z-index: 9; display: none;
     }
 
     /* Зона обзора */
@@ -77,12 +71,11 @@
     }
     #btn-shoot:active { background: rgba(231,76,60,.95); transform: scale(.93); }
 
-    /* Подсказка для ПК */
     #pc-hint {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       color: #fff; font-size: 16px; text-align: center;
-      background: rgba(0,0,0,.7); padding: 16px 24px; border-radius: 8px;
+      background: rgba(0,0,0,.75); padding: 20px 28px; border-radius: 8px;
       z-index: 20; display: none;
     }
   </style>
@@ -94,7 +87,7 @@
     <div id="score-display" class="hud-text">СЧЕТ: 0</div>
     <div id="health-display" class="hud-text">ЗДОРОВЬЕ: 100</div>
     <div id="crosshair"></div>
-    <div id="help-msg" class="hud-text">3D Танки Mobile </div>
+    <div id="help-msg" class="hud-text">Джойстик слева — движение. Свайп справа — обзор. 🔥 — выстрел.</div>
   </div>
 
   <div id="joystick-zone"></div>
@@ -105,9 +98,7 @@
   <button id="btn-shoot">🔥</button>
 
   <div id="pc-hint">
-    WASD / стрелки — движение<br>
-    Мышь — обзор<br>
-    ЛКМ или Пробел — выстрел<br><br>
+    3D Танки Mobile
     <b>Кликните, чтобы начать</b>
   </div>
 
@@ -126,8 +117,8 @@
     let health = 100;
 
     // Управление
-    const move = { x: 0, y: 0 };           // джойстик: x — поворот, y — газ/тормоз
-    const keys = {};                        // клавиатура
+    const move = { x: 0, y: 0 };
+    const keys = {};
     const shoot = { pressed: false, cooldown: 0 };
     let isPC = false;
     let pointerLocked = false;
@@ -151,8 +142,7 @@
     //  Инициализация
     // ============================
     function init() {
-      // Определяем ПК
-      isPC = !('ontouchstart' in window) || (navigator.maxTouchPoints === 0);
+      isPC = !('ontouchstart' in window) || navigator.maxTouchPoints === 0;
 
       scene = new THREE.Scene();
       scene.background = new THREE.Color(0x87CEEB);
@@ -183,8 +173,6 @@
 
       if (isPC) {
         document.getElementById('pc-hint').style.display = 'block';
-      } else {
-        document.getElementById('help-msg').style.display = 'block';
       }
 
       animate();
@@ -200,7 +188,6 @@
       ground.rotation.x = -Math.PI / 2;
       scene.add(ground);
 
-      // Здания
       const boxGeo = new THREE.BoxGeometry(10, 20, 10);
       const matWall = new THREE.MeshStandardMaterial({ color: 0x888877 });
       for (let i = 0; i < 18; i++) {
@@ -214,7 +201,6 @@
         scene.add(box);
       }
 
-      // Обломки
       const debrisGeo = new THREE.BoxGeometry(4, 4, 8);
       const debrisMat = new THREE.MeshStandardMaterial({ color: 0x776655 });
       for (let i = 0; i < 25; i++) {
@@ -224,7 +210,6 @@
         scene.add(d);
       }
 
-      // Дорога
       const roadGeo = new THREE.PlaneGeometry(12, 400);
       const roadMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
       const road = new THREE.Mesh(roadGeo, roadMat);
@@ -269,16 +254,19 @@
 
       const enemy = new THREE.Group();
 
+      // Корпус (нижняя часть)
       const eBodyGeo = new THREE.BoxGeometry(6, 3, 9);
       const eBodyMat = new THREE.MeshStandardMaterial({ color: 0xe74c3c });
       const eBody = new THREE.Mesh(eBodyGeo, eBodyMat);
       eBody.position.y = 1.5;
       enemy.add(eBody);
 
+      // Башня (верхняя часть) — отдельный меш для проверки попаданий
       const eTurretGeo = new THREE.CylinderGeometry(2.5, 2.5, 3, 12);
       const eTurretMat = new THREE.MeshStandardMaterial({ color: 0xc0392b });
       const eTurret = new THREE.Mesh(eTurretGeo, eTurretMat);
       eTurret.position.y = 3.5;
+      eTurret.name = 'turret';
       enemy.add(eTurret);
 
       let x, z;
@@ -301,6 +289,7 @@
       const bulletMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0xff8800, emissiveIntensity: 0.6 });
       const bullet = new THREE.Mesh(bulletGeo, bulletMat);
 
+      // Направление с учётом поворота башни и наклона
       const aimDir = new THREE.Vector3(0, 0, -1);
       aimDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), turretAngle + playerRotation);
       aimDir.applyAxisAngle(new THREE.Vector3(1, 0, 0), turretPitch);
@@ -347,14 +336,16 @@
 
       // Джойстик (мобильный)
       if (joyActive) {
-        throttle = -move.y; // y отрицательный = вверх = вперёд
+        throttle = -move.y;  // y отрицательный = вверх = вперёд
         steer = move.x;
       }
 
-      playerRotation += steer * rotSpeed * dt;
+      // ИСПРАВЛЕНИЕ: знак минус — потому что в Three.js положительное
+      // вращение по Y = против часовой = влево. Джойстик вправо (move.x > 0)
+      // должен поворачивать вправо, значит вычитаем.
+      playerRotation -= steer * rotSpeed * dt;
       playerTank.rotation.y = playerRotation;
 
-      // Газ
       const maxFwd = 0.4, maxRev = -0.25;
       if (throttle > 0) playerVelocity = Math.min(playerVelocity + 0.5 * dt * throttle, maxFwd);
       else if (throttle < 0) playerVelocity = Math.max(playerVelocity + 0.5 * dt * throttle, maxRev);
@@ -387,7 +378,6 @@
         const dist = dir.length();
         dir.normalize();
 
-        // Движение
         if (dist > 15) {
           e.position.addScaledVector(dir, e.userData.speed * 60 * dt);
         }
@@ -395,7 +385,6 @@
         const targetAngle = Math.atan2(dir.x, dir.z);
         e.rotation.y = targetAngle;
 
-        // Стрельба по кулдауну
         e.userData.fireCD -= dt;
         if (e.userData.fireCD <= 0 && dist < 120) {
           enemyShoot(e);
@@ -405,24 +394,44 @@
     }
 
     // ============================
-    //  Обновление пуль
+    //  Обновление пуль + попадания
     // ============================
     function updateBullets(dt) {
       for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
         b.position.addScaledVector(b.userData.velocity, 60 * dt);
-        let hit = false;
+        let remove = false;
 
         if (b.userData.fromPlayer) {
-          // Пуля игрока → попадание по врагам
+          // Пуля игрока → проверка попадания по врагам
           for (const enemy of enemies) {
             if (!enemy.userData.alive) continue;
-            if (b.position.distanceTo(enemy.position) < 4) {
+
+            // Позиция башни врага в мировых координатах
+            const turretWorldPos = new THREE.Vector3();
+            // Башня — второй дочерний элемент (index 1), на y=3.5
+            enemy.children[1].getWorldPosition(turretWorldPos);
+
+            // Позиция корпуса врага
+            const bodyWorldPos = enemy.position.clone();
+            bodyWorldPos.y = 1.5;
+
+            const distToTurret = b.position.distanceTo(turretWorldPos);
+            const distToBody = b.position.distanceTo(bodyWorldPos);
+
+            // Попадание в башню (радиус 3.0) — уничтожает врага
+            if (distToTurret < 3.0) {
               enemy.userData.alive = false;
               scene.remove(enemy);
               score++;
               document.getElementById('score-display').innerText = 'СЧЕТ: ' + score;
-              hit = true;
+              remove = true;
+              break;
+            }
+
+            // Попадание в корпус (радиус 3.5) — не уничтожает, но пуля пропадает
+            if (distToBody < 3.5) {
+              remove = true;
               break;
             }
           }
@@ -431,7 +440,7 @@
           if (b.position.distanceTo(playerTank.position) < 4) {
             health -= 10;
             document.getElementById('health-display').innerText = 'ЗДОРОВЬЕ: ' + Math.max(0, health);
-            hit = true;
+            remove = true;
             if (health <= 0) {
               health = 100;
               score = 0;
@@ -446,7 +455,7 @@
           }
         }
 
-        if (hit || b.position.distanceTo(playerTank.position) > 200) {
+        if (remove || b.position.distanceTo(playerTank.position) > 200) {
           scene.remove(b);
           bullets.splice(i, 1);
         }
@@ -465,11 +474,12 @@
     }
 
     // ============================
-    //  Джойстик (мобильный)
+    //  Джойстик
     // ============================
     function setupJoystick() {
       joyZone.addEventListener('touchstart', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         const t = e.changedTouches[0];
         joyActive = true;
         joyId = t.identifier;
@@ -486,6 +496,7 @@
 
       joyZone.addEventListener('touchmove', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         for (const t of e.changedTouches) {
           if (t.identifier !== joyId) continue;
           const dx = t.clientX - joyCenterX;
@@ -518,13 +529,14 @@
     }
 
     // ============================
-    //  Обзор — мобильный (правая зона)
+    //  Обзор — мобильный
     // ============================
     function setupLook() {
       const lookZone = document.getElementById('look-zone');
 
       lookZone.addEventListener('touchstart', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         lookDragging = true;
         const t = e.changedTouches[0];
         lookLastX = t.clientX;
@@ -534,16 +546,24 @@
       lookZone.addEventListener('touchmove', (e) => {
         if (!lookDragging) return;
         e.preventDefault();
+        e.stopPropagation();
         const t = e.changedTouches[0];
         const dx = t.clientX - lookLastX;
         const dy = t.clientY - lookLastY;
-        turretAngle -= dx * 0.004;
-        turretPitch = THREE.MathUtils.clamp(turretPitch - dy * 0.003, -0.5, 0.5);
+
+        // ИСПРАВЛЕНИЕ: нормальная чувствительность и направление
+        // Свайп вправо (dx > 0) → обзор вправо → turretAngle уменьшается
+        // (потому что камера смотрит вдоль -Z, поворот вправо = отрицательный угол)
+        turretAngle -= dx * 0.005;
+        turretPitch = THREE.MathUtils.clamp(turretPitch - dy * 0.004, -0.6, 0.6);
+
         lookLastX = t.clientX;
         lookLastY = t.clientY;
       }, { passive: false });
 
-      const lookEnd = () => { lookDragging = false; };
+      const lookEnd = (e) => {
+        lookDragging = false;
+      };
       lookZone.addEventListener('touchend', lookEnd);
       lookZone.addEventListener('touchcancel', lookEnd);
     }
@@ -553,10 +573,11 @@
     // ============================
     function setupShootButton() {
       const el = document.getElementById('btn-shoot');
-      const on  = (e) => { e.preventDefault(); shoot.pressed = true; };
-      const off = () => { shoot.pressed = false; };
+      const on  = (e) => { e.preventDefault(); e.stopPropagation(); shoot.pressed = true; };
+      const off = (e) => { e.preventDefault(); e.stopPropagation(); shoot.pressed = false; };
       el.addEventListener('touchstart', on, { passive: false });
       el.addEventListener('touchend', off);
+      el.addEventListener('touchcancel', off);
       el.addEventListener('mousedown', on);
       el.addEventListener('mouseup', off);
       el.addEventListener('mouseleave', off);
@@ -577,7 +598,7 @@
     }
 
     // ============================
-    //  Мышь (ПК) — pointer lock
+    //  Мышь (ПК)
     // ============================
     function setupMouse() {
       const canvas = renderer.domElement;
@@ -597,8 +618,12 @@
 
       document.addEventListener('mousemove', (e) => {
         if (!pointerLocked) return;
-        turretAngle -= e.movementX * 0.0025;
-        turretPitch = THREE.MathUtils.clamp(turretPitch - e.movementY * 0.002, -0.5, 0.5);
+
+        // ИСПРАВЛЕНИЕ: движение мыши вправо (movementX > 0) → обзор вправо
+        // turretAngle уменьшается, потому что направление взгляда = turretAngle + playerRotation,
+        // и положительный угол = поворот влево (против часовой в Three.js)
+        turretAngle -= e.movementX * 0.003;
+        turretPitch = THREE.MathUtils.clamp(turretPitch - e.movementY * 0.0025, -0.6, 0.6);
       });
 
       canvas.addEventListener('mousedown', (e) => {
@@ -643,5 +668,6 @@
   </script>
 </body>
 </html>
+
 
 
