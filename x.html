@@ -784,29 +784,27 @@
                 const dz = playerPos.z - enemy.position.z;
                 const distToPlayer = Math.sqrt(dx * dx + dz * dz);
 
-                // === ПОВОРОТ К ИГРОКУ ===
-                // Нос танка смотрит в -Z локально. Чтобы развернуть его в сторону игрока,
-                // нужен угол atan2(dx, dz), где dx и dz — компоненты вектора К игроку.
+                // Поворот корпуса в сторону игрока
                 const targetAngle = Math.atan2(dx, dz);
                 let angleDiff = targetAngle - enemy.rotation.y;
                 while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
                 while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
                 enemy.rotation.y += angleDiff * 0.05;
 
-                // === ДВИЖЕНИЕ К ИГРОКУ ===
-                // Нос смотрит в -Z локально. После поворота на targetAngle
-                // локальный -Z смотрит ровно на игрока.
-                // translateZ(С + ) двигает по локальному +Z = ОТ игрока
-                // translateZ(С - ) двигает по локальному -Z = К игроку
+                // ЕДЕМ К ИГРОКУ.
+                // Нос танка смотрит в локальный -Z.
+                // rotateY(atan2(dx, dz)) поворачивает нос так, что он смотрит на игрока.
+                // translateZ(+speed) двигает вдоль локального +Z = вперёд кормы,
+                // т.е. носом вперёд = К игроку.
                 if (distToPlayer > 2.5) {
-                    enemy.translateZ(-enemy.userData.speed);
+                    enemy.translateZ(enemy.userData.speed);
                 }
 
                 // Ограничения карты
                 enemy.position.x = Math.max(-90, Math.min(90, enemy.position.x));
                 enemy.position.z = Math.max(-90, Math.min(90, enemy.position.z));
 
-                // Выталкивание из зданий (без остановки движения)
+                // Выталкивание из зданий
                 for (const pos of buildingPositions) {
                     const edx = enemy.position.x - pos.x;
                     const edz = enemy.position.z - pos.z;
