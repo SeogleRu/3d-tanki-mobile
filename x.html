@@ -779,20 +779,25 @@
             const playerPos = tankGroup.position;
 
             for (const enemy of enemies) {
-                // Направление на игрока
+                // Вектор от врага к игроку
                 const dx = playerPos.x - enemy.position.x;
                 const dz = playerPos.z - enemy.position.z;
                 const distToPlayer = Math.sqrt(dx * dx + dz * dz);
 
-                // Поворот корпуса в сторону игрока
+                // === ПОВОРОТ К ИГРОКУ ===
+                // Нос танка смотрит в -Z локально. Чтобы развернуть его в сторону игрока,
+                // нужен угол atan2(dx, dz), где dx и dz — компоненты вектора К игроку.
                 const targetAngle = Math.atan2(dx, dz);
                 let angleDiff = targetAngle - enemy.rotation.y;
                 while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
                 while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
                 enemy.rotation.y += angleDiff * 0.05;
 
-                // ЕДЕМ ВПЕРЁД К ИГРОКУ — своя скорость у каждого
-                // Едут до самого контакта (пока не врежутся)
+                // === ДВИЖЕНИЕ К ИГРОКУ ===
+                // Нос смотрит в -Z локально. После поворота на targetAngle
+                // локальный -Z смотрит ровно на игрока.
+                // translateZ(С + ) двигает по локальному +Z = ОТ игрока
+                // translateZ(С - ) двигает по локальному -Z = К игроку
                 if (distToPlayer > 2.5) {
                     enemy.translateZ(-enemy.userData.speed);
                 }
@@ -801,7 +806,7 @@
                 enemy.position.x = Math.max(-90, Math.min(90, enemy.position.x));
                 enemy.position.z = Math.max(-90, Math.min(90, enemy.position.z));
 
-                // Простое выталкивание из зданий (без остановки движения)
+                // Выталкивание из зданий (без остановки движения)
                 for (const pos of buildingPositions) {
                     const edx = enemy.position.x - pos.x;
                     const edz = enemy.position.z - pos.z;
@@ -809,7 +814,6 @@
                     const halfD = pos.depth / 2 + 1.5;
                     
                     if (Math.abs(edx) < halfW && Math.abs(edz) < halfD) {
-                        // Выталкиваем по меньшей оси
                         if (Math.abs(edx) / halfW > Math.abs(edz) / halfD) {
                             enemy.position.x = pos.x + Math.sign(edx) * halfW;
                         } else {
