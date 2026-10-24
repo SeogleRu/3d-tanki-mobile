@@ -5,16 +5,181 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>3D Танки Mobile: X</title>
     <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             margin: 0;
             overflow: hidden;
             font-family: 'Arial', sans-serif;
             touch-action: none;
+            background: #000;
+            color: #fff;
         }
+        #game-canvas { display: block; }
+
+        /* ========== МЕНЮ (оптимизировано) ========== */
+        #menu {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #16213e;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            padding: 15px 12px;
+            -webkit-overflow-scrolling: touch;
+            will-change: scroll-position;
+        }
+        #menu::-webkit-scrollbar { width: 6px; }
+        #menu::-webkit-scrollbar-thumb { background: #00ff88; border-radius: 3px; }
+
+        .menu-title {
+            font-size: clamp(22px, 6.5vw, 42px);
+            font-weight: bold;
+            color: #00ff88;
+            text-align: center;
+            margin: 10px 0 18px 0;
+            letter-spacing: 2px;
+            /* убран animation — вместо него статичное свечение через text-shadow */
+            text-shadow: 0 0 12px rgba(0, 255, 136, 0.7);
+            will-change: auto;
+        }
+
+        .menu-section {
+            width: 100%;
+            max-width: 520px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(0, 255, 136, 0.25);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            /* Убираем backdrop-filter — сильно тормозит на телефонах */
+        }
+
+        .section-title {
+            font-size: 13px;
+            color: #00ff88;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .options-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .option-btn {
+            flex: 1;
+            min-width: 70px;
+            padding: 11px 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.18);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.12s, border-color 0.12s;
+            text-align: center;
+        }
+        .option-btn:active { background: rgba(255,255,255,0.15); }
+        .option-btn.selected {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+
+        .upgrade-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .upgrade-row:last-child { border-bottom: none; }
+
+        .upgrade-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+            min-width: 0;
+        }
+        .upgrade-name {
+            font-size: 13px;
+            font-weight: bold;
+            color: #fff;
+        }
+        .upgrade-desc {
+            font-size: 10px;
+            color: #999;
+        }
+
+        .upgrade-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .upgrade-level {
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 13px;
+            min-width: 26px;
+            text-align: center;
+        }
+        .upgrade-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(0, 255, 136, 0.15);
+            border: 2px solid #00ff88;
+            color: #00ff88;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            padding: 0;
+            line-height: 1;
+        }
+        .upgrade-btn:active { background: rgba(0,255,136,0.3); }
+        .upgrade-btn:disabled {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.25);
+            cursor: not-allowed;
+        }
+
+        #start-btn {
+            width: 100%;
+            max-width: 520px;
+            padding: 18px;
+            background: #00cc66;
+            border: none;
+            border-radius: 12px;
+            color: #0a0a0a;
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            margin-top: 6px;
+            margin-bottom: 15px;
+            /* убран градиент + box-shadow glow для плавности */
+            transition: background 0.12s;
+        }
+        #start-btn:active { background: #00aa55; }
+
+        /* ========== ИГРОВОЙ HUD ========== */
         #info {
             position: absolute;
-            top: 10px;
-            left: 10px;
+            top: 10px; left: 10px;
             color: white;
             background: rgba(0,0,0,0.7);
             padding: 8px 16px;
@@ -22,103 +187,108 @@
             font-size: 14px;
             pointer-events: none;
             z-index: 100;
+            display: none;
+        }
+        #timer-display {
+            position: absolute;
+            top: 10px; left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 100;
+            display: none;
+            border: 2px solid rgba(0, 255, 136, 0.4);
+        }
+        #timer-display.warning {
+            color: #ff3333;
+            border-color: #ff3333;
+        }
+        #enemy-counter {
+            position: absolute;
+            top: 10px; right: 160px;
+            color: white;
+            background: rgba(200,0,0,0.7);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 100;
+            display: none;
         }
         #crosshair {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 30px;
-            height: 30px;
+            top: 50%; left: 50%;
+            width: 30px; height: 30px;
             transform: translate(-50%, -50%);
             pointer-events: none;
             z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: none;
         }
         #crosshair::before, #crosshair::after {
             content: '';
             position: absolute;
             background: rgba(255, 255, 255, 0.9);
         }
-        #crosshair::before {
-            width: 3px;
-            height: 20px;
-        }
-        #crosshair::after {
-            width: 20px;
-            height: 3px;
-        }
+        #crosshair::before { width: 3px; height: 20px; top: 5px; left: 13.5px; }
+        #crosshair::after { width: 20px; height: 3px; top: 13.5px; left: 5px; }
         #crosshair .dot {
-            width: 4px;
-            height: 4px;
+            width: 4px; height: 4px;
             background: #ff3333;
             border-radius: 50%;
             position: absolute;
+            top: 13px; left: 13px;
         }
         #scope-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             pointer-events: none;
             z-index: 99;
             display: none;
         }
-        #scope-overlay .scope-circle {
+        .scope-circle {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 80vmin;
-            height: 80vmin;
+            top: 50%; left: 50%;
+            width: 80vmin; height: 80vmin;
             border-radius: 50%;
             box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.85);
             transform: translate(-50%, -50%);
             border: 2px solid rgba(255, 255, 255, 0.3);
         }
-        #scope-overlay .scope-cross {
+        .scope-cross {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 80vmin;
-            height: 80vmin;
+            top: 50%; left: 50%;
+            width: 80vmin; height: 80vmin;
             transform: translate(-50%, -50%);
-            pointer-events: none;
         }
-        #scope-overlay .scope-cross::before,
-        #scope-overlay .scope-cross::after {
+        .scope-cross::before, .scope-cross::after {
             content: '';
             position: absolute;
             background: rgba(255, 255, 255, 0.6);
         }
-        #scope-overlay .scope-cross::before {
-            width: 2px;
-            height: 10vmin;
-            top: 50%;
-            left: 50%;
+        .scope-cross::before {
+            width: 2px; height: 10vmin;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
         }
-        #scope-overlay .scope-cross::after {
-            width: 10vmin;
-            height: 2px;
-            top: 50%;
-            left: 50%;
+        .scope-cross::after {
+            width: 10vmin; height: 2px;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
         }
         #controls {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            display: flex;
+            bottom: 20px; left: 20px; right: 20px;
+            display: none;
             justify-content: space-between;
             pointer-events: none;
             z-index: 100;
         }
         .joystick {
-            width: 120px;
-            height: 120px;
+            width: 120px; height: 120px;
             background: rgba(255, 255, 255, 0.15);
             border-radius: 50%;
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -127,19 +297,16 @@
             touch-action: none;
         }
         .joystick-knob {
-            width: 50px;
-            height: 50px;
+            width: 50px; height: 50px;
             background: rgba(255, 255, 255, 0.5);
             border-radius: 50%;
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             pointer-events: none;
         }
         .fire-btn {
-            width: 100px;
-            height: 100px;
+            width: 100px; height: 100px;
             background: rgba(255, 50, 50, 0.6);
             border-radius: 50%;
             border: 3px solid rgba(255, 255, 255, 0.6);
@@ -153,19 +320,15 @@
             touch-action: none;
             user-select: none;
         }
-        .fire-btn:active {
-            background: rgba(255, 0, 0, 0.9);
-        }
+        .fire-btn:active { background: rgba(255, 0, 0, 0.9); }
         .scope-btn {
             position: absolute;
-            bottom: 140px;
-            right: 20px;
-            width: 70px;
-            height: 70px;
+            bottom: 140px; right: 20px;
+            width: 70px; height: 70px;
             background: rgba(0, 150, 255, 0.6);
             border-radius: 50%;
             border: 2px solid rgba(255, 255, 255, 0.6);
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             color: white;
@@ -176,20 +339,17 @@
             user-select: none;
             z-index: 101;
         }
-        .scope-btn:active {
-            background: rgba(0, 100, 255, 0.9);
-        }
+        .scope-btn:active { background: rgba(0, 100, 255, 0.9); }
         #health-bar {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 150px;
-            height: 20px;
+            top: 10px; right: 10px;
+            width: 140px; height: 20px;
             background: rgba(0,0,0,0.5);
             border-radius: 10px;
             overflow: hidden;
             border: 2px solid rgba(255,255,255,0.3);
             z-index: 100;
+            display: none;
         }
         #health-fill {
             height: 100%;
@@ -197,68 +357,152 @@
             background: #00ff00;
             transition: width 0.2s;
         }
-        #score {
+        #damage-flash {
             position: absolute;
-            top: 40px;
-            right: 10px;
-            color: white;
-            background: rgba(0,0,0,0.5);
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 14px;
-            z-index: 100;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255, 0, 0, 0);
+            pointer-events: none;
+            z-index: 150;
+            transition: background 0.15s;
         }
-        #enemy-counter {
+        #game-over, #victory {
             position: absolute;
-            top: 70px;
-            left: 10px;
-            color: white;
-            background: rgba(200,0,0,0.7);
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 14px;
-            z-index: 100;
-        }
-        #game-over {
-            position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             color: white;
-            background: rgba(0,0,0,0.9);
-            padding: 30px 50px;
+            background: rgba(0,0,0,0.95);
+            padding: 30px 40px;
             border-radius: 20px;
             text-align: center;
             display: none;
             z-index: 200;
-            border: 3px solid #ff3333;
+            min-width: 280px;
         }
-        #game-over h1 {
-            margin: 0 0 20px 0;
-            color: #ff3333;
-        }
-        #game-over button {
+        #game-over { border: 3px solid #ff3333; }
+        #victory { border: 3px solid #00ff00; }
+        #game-over h1 { margin: 0 0 15px 0; color: #ff3333; font-size: 28px; }
+        #victory h1 { margin: 0 0 15px 0; color: #00ff00; font-size: 32px; }
+        #game-over p, #victory p { margin: 8px 0; font-size: 16px; }
+        #game-over button, #victory button {
             padding: 12px 30px;
-            font-size: 18px;
-            background: #ff3333;
+            font-size: 16px;
             color: white;
             border: none;
             border-radius: 10px;
             cursor: pointer;
             font-weight: bold;
+            margin-top: 15px;
         }
-        #game-over button:active {
-            background: #cc0000;
+        #game-over button { background: #ff3333; }
+        #victory button { background: #00aa00; }
+        #game-over button:active { background: #cc0000; }
+        #victory button:active { background: #007700; }
+
+        #pause-btn {
+            position: absolute;
+            top: 50px; right: 10px;
+            width: 40px; height: 40px;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 50%;
+            color: white;
+            font-size: 16px;
+            z-index: 101;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
         }
+        #pause-btn:active { background: rgba(0,0,0,0.9); }
     </style>
 </head>
 <body>
+    <canvas id="game-canvas"></canvas>
+
+    <!-- МЕНЮ -->
+    <div id="menu">
+        <div class="menu-title">3D ТАНКИ MOBILE: X</div>
+
+        <div class="menu-section">
+            <div class="section-title">⏱ Время боя</div>
+            <div class="options-row" id="time-options">
+                <button class="option-btn" data-time="60">1 мин</button>
+                <button class="option-btn selected" data-time="120">2 мин</button>
+                <button class="option-btn" data-time="180">3 мин</button>
+                <button class="option-btn" data-time="300">5 мин</button>
+            </div>
+        </div>
+
+        <div class="menu-section">
+            <div class="section-title">🎖 Уровень сложности</div>
+            <div class="options-row" id="difficulty-options">
+                <button class="option-btn" data-diff="easy">Легко</button>
+                <button class="option-btn selected" data-diff="normal">Норма</button>
+                <button class="option-btn" data-diff="hard">Сложно</button>
+            </div>
+        </div>
+
+        <div class="menu-section">
+            <div class="section-title">🔧 Улучшения танка</div>
+            <div class="upgrade-row">
+                <div class="upgrade-info">
+                    <div class="upgrade-name">🛡 Броня</div>
+                    <div class="upgrade-desc">+20% здоровья</div>
+                </div>
+                <div class="upgrade-controls">
+                    <button class="upgrade-btn" data-upg="armor" data-dir="-1">−</button>
+                    <div class="upgrade-level" id="lvl-armor">0</div>
+                    <button class="upgrade-btn" data-upg="armor" data-dir="1">+</button>
+                </div>
+            </div>
+            <div class="upgrade-row">
+                <div class="upgrade-info">
+                    <div class="upgrade-name">⚡ Скорость</div>
+                    <div class="upgrade-desc">+15% скорости</div>
+                </div>
+                <div class="upgrade-controls">
+                    <button class="upgrade-btn" data-upg="speed" data-dir="-1">−</button>
+                    <div class="upgrade-level" id="lvl-speed">0</div>
+                    <button class="upgrade-btn" data-upg="speed" data-dir="1">+</button>
+                </div>
+            </div>
+            <div class="upgrade-row">
+                <div class="upgrade-info">
+                    <div class="upgrade-name">🎯 Урон</div>
+                    <div class="upgrade-desc">+1 урон</div>
+                </div>
+                <div class="upgrade-controls">
+                    <button class="upgrade-btn" data-upg="damage" data-dir="-1">−</button>
+                    <div class="upgrade-level" id="lvl-damage">0</div>
+                    <button class="upgrade-btn" data-upg="damage" data-dir="1">+</button>
+                </div>
+            </div>
+            <div class="upgrade-row">
+                <div class="upgrade-info">
+                    <div class="upgrade-name">🔥 Скорострельность</div>
+                    <div class="upgrade-desc">−15% задержки</div>
+                </div>
+                <div class="upgrade-controls">
+                    <button class="upgrade-btn" data-upg="rate" data-dir="-1">−</button>
+                    <div class="upgrade-level" id="lvl-rate">0</div>
+                    <button class="upgrade-btn" data-upg="rate" data-dir="1">+</button>
+                </div>
+            </div>
+        </div>
+
+        <button id="start-btn">НАЧАТЬ БОЙ!</button>
+    </div>
+
+    <!-- HUD -->
+    <div id="timer-display">02:00</div>
     <div id="info">🏆 Уничтожено: <span id="kill-count">0</span></div>
-    <div id="enemy-counter">🎯 Врагов: <span id="enemy-count">0</span></div>
+    <div id="enemy-counter">🎯 <span id="enemy-count">0</span></div>
     <div id="health-bar"><div id="health-fill"></div></div>
-    <div id="score">❤️ Здоровье</div>
     <div id="crosshair"><div class="dot"></div></div>
-    
+    <div id="damage-flash"></div>
+    <button id="pause-btn">⏸</button>
+
     <div id="scope-overlay">
         <div class="scope-circle"></div>
         <div class="scope-cross"></div>
@@ -273,9 +517,17 @@
     <div class="scope-btn" id="scope-btn">ПРИЦЕЛ</div>
 
     <div id="game-over">
-        <h1>💥 ТАНК УНИЧТОЖЕН 💥</h1>
-        <p>Вы уничтожили <span id="final-kills">0</span> вражеских танков</p>
-        <button id="restart-btn">ИГРАТЬ СНОВА</button>
+        <h1>💥 ТАНК УНИЧТОЖЕН</h1>
+        <p>Уничтожено врагов: <span id="final-kills">0</span></p>
+        <button id="restart-btn">В МЕНЮ</button>
+    </div>
+
+    <div id="victory">
+        <h1>🏆 ПОБЕДА!</h1>
+        <p id="victory-reason">Все враги уничтожены!</p>
+        <p>Уничтожено врагов: <span id="victory-kills">0</span></p>
+        <p>Осталось здоровья: <span id="victory-health">100</span>%</p>
+        <button id="victory-btn">В МЕНЮ</button>
     </div>
 
     <script type="importmap">
@@ -289,29 +541,73 @@
     <script type="module">
         import * as THREE from 'three';
 
+        // ========== НАСТРОЙКИ ==========
+        const settings = {
+            time: 120,
+            difficulty: 'normal',
+            upgrades: { armor: 0, speed: 0, damage: 0, rate: 0 }
+        };
+
+        document.querySelectorAll('#time-options .option-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#time-options .option-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                settings.time = parseInt(btn.dataset.time);
+            });
+        });
+
+        document.querySelectorAll('#difficulty-options .option-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#difficulty-options .option-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                settings.difficulty = btn.dataset.diff;
+            });
+        });
+
+        const MAX_UPGRADE = 5;
+        document.querySelectorAll('.upgrade-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const upg = btn.dataset.upg;
+                const dir = parseInt(btn.dataset.dir);
+                const newVal = settings.upgrades[upg] + dir;
+                if (newVal >= 0 && newVal <= MAX_UPGRADE) {
+                    settings.upgrades[upg] = newVal;
+                    document.getElementById('lvl-' + upg).textContent = newVal;
+                    updateUpgradeButtons();
+                }
+            });
+        });
+
+        function updateUpgradeButtons() {
+            document.querySelectorAll('.upgrade-btn').forEach(btn => {
+                const upg = btn.dataset.upg;
+                const dir = parseInt(btn.dataset.dir);
+                const val = settings.upgrades[upg];
+                btn.disabled = (dir === -1 && val === 0) || (dir === 1 && val === MAX_UPGRADE);
+            });
+        }
+        updateUpgradeButtons();
+
         // ========== СЦЕНА ==========
+        const canvas = document.getElementById('game-canvas');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x87CEEB);
         scene.fog = new THREE.Fog(0x87CEEB, 30, 120);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 500);
-
-        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = false;
-        document.body.appendChild(renderer.domElement);
 
-        // ========== СВЕТ ==========
+        // Свет
         scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-
         const dirLight = new THREE.DirectionalLight(0xfff5e6, 1.2);
         dirLight.position.set(50, 80, 30);
         scene.add(dirLight);
-
         scene.add(new THREE.HemisphereLight(0x87CEEB, 0x4a4a4a, 0.6));
 
-        // ========== ЗЕМЛЯ ==========
+        // Земля
         const ground = new THREE.Mesh(
             new THREE.PlaneGeometry(200, 200),
             new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.9 })
@@ -331,7 +627,8 @@
 
         // ========== ГОРОД ==========
         const buildingColors = [0x8a8a8a, 0x7a7a7a, 0x9a8a7a, 0x6a6a6a, 0x8a7a6a];
-        
+        const buildingPositions = [];
+
         function createBuilding(x, z, width, height, depth) {
             const color = buildingColors[Math.floor(Math.random() * buildingColors.length)];
             const building = new THREE.Mesh(
@@ -358,7 +655,6 @@
             }
         }
 
-        const buildingPositions = [];
         for (let i = 0; i < 40; i++) {
             let x, z, tooClose, attempts = 0;
             do {
@@ -461,7 +757,9 @@
 
         let isPointerLocked = false;
         renderer.domElement.addEventListener('click', () => {
-            if (!isPointerLocked && !isMobile()) renderer.domElement.requestPointerLock();
+            if (!isPointerLocked && !isMobile() && gameRunning && !gameOver && !victory && !paused) {
+                renderer.domElement.requestPointerLock();
+            }
         });
         document.addEventListener('pointerlockchange', () => {
             isPointerLocked = document.pointerLockElement === renderer.domElement;
@@ -474,7 +772,6 @@
             }
         });
 
-        // ========== МОБИЛЬНОЕ УПРАВЛЕНИЕ ==========
         function isMobile() {
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
@@ -525,7 +822,7 @@
         let lookTouchId = null, lookLastX = 0, lookLastY = 0;
         renderer.domElement.addEventListener('touchstart', (e) => {
             for (const touch of e.changedTouches) {
-                if (touch.clientX > window.innerWidth * 0.4) {
+                if (touch.clientX > window.innerWidth * 0.4 && touch.clientY < window.innerHeight * 0.8) {
                     lookTouchId = touch.identifier;
                     lookLastX = touch.clientX;
                     lookLastY = touch.clientY;
@@ -562,6 +859,7 @@
         scopeBtn.addEventListener('touchstart', (e) => { e.preventDefault(); toggleScope(); }, { passive: false });
 
         function toggleScope() {
+            if (!gameRunning || gameOver || victory || paused) return;
             scopeActive = !scopeActive;
             if (scopeActive) {
                 scopeOverlay.style.display = 'block';
@@ -580,7 +878,20 @@
         const bulletGeometry = new THREE.SphereGeometry(0.15, 6, 6);
         const bulletMaterial = new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0xff4400 });
 
+        let lastShotTime = 0;
+        function getFireDelay() {
+            return 400 * (1 - settings.upgrades.rate * 0.15);
+        }
+        function getPlayerDamage() {
+            return 1 + settings.upgrades.damage;
+        }
+
         function fire() {
+            if (!gameRunning || gameOver || victory || paused) return;
+            const now = performance.now();
+            if (now - lastShotTime < getFireDelay()) return;
+            lastShotTime = now;
+
             const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
             const startPos = new THREE.Vector3();
             barrelTip.getWorldPosition(startPos);
@@ -591,16 +902,61 @@
             
             bullet.userData.velocity = direction.multiplyScalar(2.0);
             bullet.userData.life = 120;
+            bullet.userData.damage = getPlayerDamage();
             
             scene.add(bullet);
             bullets.push(bullet);
         }
 
+        // ========== СНАРЯДЫ ВРАГОВ ==========
+        const enemyBullets = [];
+        const enemyBulletGeo = new THREE.SphereGeometry(0.22, 6, 6);
+        const enemyBulletMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xaa0000 });
+
+        function enemyFire(enemy) {
+            const bullet = new THREE.Mesh(enemyBulletGeo, enemyBulletMat);
+            
+            const startPos = new THREE.Vector3();
+            startPos.copy(enemy.position);
+            startPos.y = 1.6;
+            
+            const dx = tankGroup.position.x - enemy.position.x;
+            const dz = tankGroup.position.z - enemy.position.z;
+            const dist = Math.sqrt(dx * dx + dz * dz) || 1;
+            startPos.x += (dx / dist) * 2.2;
+            startPos.z += (dz / dist) * 2.2;
+            
+            bullet.position.copy(startPos);
+            
+            const targetPos = new THREE.Vector3();
+            tankGroup.getWorldPosition(targetPos);
+            targetPos.y = 1.2;
+            
+            const direction = new THREE.Vector3().subVectors(targetPos, startPos).normalize();
+            
+            const accuracy = DIFFICULTY[settings.difficulty].accuracy;
+            direction.x += (Math.random() - 0.5) * accuracy;
+            direction.z += (Math.random() - 0.5) * accuracy;
+            direction.normalize();
+            
+            bullet.userData.velocity = direction.multiplyScalar(0.9);
+            bullet.userData.life = 200;
+            bullet.userData.damage = DIFFICULTY[settings.difficulty].enemyDamage;
+            
+            scene.add(bullet);
+            enemyBullets.push(bullet);
+        }
+
+        // ========== СЛОЖНОСТЬ ==========
+        const DIFFICULTY = {
+            easy:   { enemySpeed: 0.6,  enemyHealth: 2, enemyDamage: 5,  accuracy: 0.15, enemyCount: 10, fireRate: 1.6 },
+            normal: { enemySpeed: 1.0,  enemyHealth: 3, enemyDamage: 8,  accuracy: 0.06, enemyCount: 15, fireRate: 1.0 },
+            hard:   { enemySpeed: 1.5,  enemyHealth: 4, enemyDamage: 12, accuracy: 0.03, enemyCount: 20, fireRate: 0.6 }
+        };
+
         // ========== ВРАГИ ==========
         const enemies = [];
-        const MAX_ENEMIES = 25;
-        const INITIAL_ENEMIES = 15;
-        const RESPAWN_DELAY = 800;
+        let totalEnemies = 0;
 
         const enemyBodyGeo = new THREE.BoxGeometry(2.2, 0.8, 3.5);
         const enemyTurretGeo = new THREE.BoxGeometry(1.5, 0.6, 1.5);
@@ -648,9 +1004,12 @@
 
             enemyGroup.position.set(x, 0, z);
             
-            enemyGroup.userData.health = 3;
-            // Каждый враг имеет СВОЮ скорость — «в своём темпе»
-            enemyGroup.userData.speed = 0.025 + Math.random() * 0.04;
+            const diff = DIFFICULTY[settings.difficulty];
+            enemyGroup.userData.health = diff.enemyHealth;
+            enemyGroup.userData.maxHealth = diff.enemyHealth;
+            enemyGroup.userData.speed = (0.025 + Math.random() * 0.04) * diff.enemySpeed;
+            enemyGroup.userData.fireCooldown = 60 + Math.random() * 120;
+            enemyGroup.userData.fireRate = (120 + Math.random() * 120) * diff.fireRate;
             
             scene.add(enemyGroup);
             enemies.push(enemyGroup);
@@ -661,52 +1020,196 @@
             document.getElementById('enemy-count').textContent = enemies.length;
         }
 
-        for (let i = 0; i < INITIAL_ENEMIES; i++) createEnemy();
+        // ========== ЭФФЕКТ УРОНА ==========
+        const damageFlash = document.getElementById('damage-flash');
+        let flashTimeout = null;
+
+        function showDamageFlash() {
+            damageFlash.style.background = 'rgba(255, 0, 0, 0.45)';
+            if (flashTimeout) clearTimeout(flashTimeout);
+            flashTimeout = setTimeout(() => {
+                damageFlash.style.background = 'rgba(255, 0, 0, 0)';
+            }, 120);
+        }
 
         // ========== СОСТОЯНИЕ ИГРЫ ==========
         let playerHealth = 100;
+        let playerMaxHealth = 100;
         let kills = 0;
         let gameOver = false;
+        let victory = false;
+        let gameRunning = false;
+        let paused = false;
+        let timeLeft = 0;
+        let timerInterval = null;
 
         const healthFill = document.getElementById('health-fill');
         const killCountEl = document.getElementById('kill-count');
         const finalKillsEl = document.getElementById('final-kills');
+        const victoryKillsEl = document.getElementById('victory-kills');
+        const victoryHealthEl = document.getElementById('victory-health');
+        const victoryReasonEl = document.getElementById('victory-reason');
         const gameOverEl = document.getElementById('game-over');
-        const restartBtn = document.getElementById('restart-btn');
+        const victoryEl = document.getElementById('victory');
+        const timerDisplay = document.getElementById('timer-display');
+        const pauseBtn = document.getElementById('pause-btn');
 
-        restartBtn.addEventListener('click', () => {
+        function damagePlayer(amount) {
+            if (gameOver || victory || paused || !gameRunning) return;
+            playerHealth -= amount;
+            if (playerHealth < 0) playerHealth = 0;
+            healthFill.style.width = (playerHealth / playerMaxHealth * 100) + '%';
+            showDamageFlash();
+            
+            if (playerHealth <= 0) {
+                endGameDefeat();
+            }
+        }
+
+        function endGameDefeat() {
+            gameOver = true;
+            gameRunning = false;
+            if (timerInterval) clearInterval(timerInterval);
+            finalKillsEl.textContent = kills;
+            gameOverEl.style.display = 'block';
+            hideHUD();
+            if (document.pointerLockElement) document.exitPointerLock();
+        }
+
+        function endGameVictory(reason) {
+            victory = true;
+            gameRunning = false;
+            if (timerInterval) clearInterval(timerInterval);
+            victoryReasonEl.textContent = reason;
+            victoryKillsEl.textContent = kills;
+            victoryHealthEl.textContent = Math.round(playerHealth / playerMaxHealth * 100);
+            victoryEl.style.display = 'block';
+            hideHUD();
+            if (document.pointerLockElement) document.exitPointerLock();
+        }
+
+        function hideHUD() {
+            ['info','enemy-counter','health-bar','crosshair','controls','scope-btn','timer-display','pause-btn'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+        }
+
+        function showHUD() {
+            document.getElementById('info').style.display = 'block';
+            document.getElementById('enemy-counter').style.display = 'block';
+            document.getElementById('health-bar').style.display = 'block';
+            document.getElementById('crosshair').style.display = 'block';
+            document.getElementById('controls').style.display = 'flex';
+            document.getElementById('scope-btn').style.display = 'flex';
+            document.getElementById('timer-display').style.display = 'block';
+            document.getElementById('pause-btn').style.display = 'flex';
+        }
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function updateTimer() {
+            if (!gameRunning || paused) return;
+            timeLeft--;
+            timerDisplay.textContent = formatTime(timeLeft);
+            if (timeLeft <= 10) {
+                timerDisplay.classList.add('warning');
+            }
+            if (timeLeft <= 0) {
+                endGameVictory('Время вышло — вы выжили!');
+            }
+        }
+
+        // ========== СТАРТ ИГРЫ ==========
+        function startGame() {
+            document.getElementById('menu').style.display = 'none';
+            showHUD();
+            
+            playerMaxHealth = 100 + settings.upgrades.armor * 20;
+            playerHealth = playerMaxHealth;
+            healthFill.style.width = '100%';
+            
             gameOver = false;
-            playerHealth = 100;
+            victory = false;
+            gameRunning = true;
+            paused = false;
             kills = 0;
             turretYaw = 0;
             barrelPitch = 0;
-            healthFill.style.width = '100%';
+            scopeActive = false;
+            scopeOverlay.style.display = 'none';
+            camera.fov = 75;
+            camera.updateProjectionMatrix();
+            
             killCountEl.textContent = '0';
             gameOverEl.style.display = 'none';
+            victoryEl.style.display = 'none';
+            timerDisplay.classList.remove('warning');
+            pauseBtn.textContent = '⏸';
             
             for (const enemy of enemies) scene.remove(enemy);
             enemies.length = 0;
             for (const bullet of bullets) scene.remove(bullet);
             bullets.length = 0;
+            for (const bullet of enemyBullets) scene.remove(bullet);
+            enemyBullets.length = 0;
             
             tankGroup.position.set(0, 0, 0);
             tankGroup.rotation.set(0, 0, 0);
+            turretGroup.rotation.set(0, 0, 0);
+            barrelGroup.rotation.set(0, 0, 0);
             
-            for (let i = 0; i < INITIAL_ENEMIES; i++) createEnemy();
+            totalEnemies = DIFFICULTY[settings.difficulty].enemyCount;
+            for (let i = 0; i < totalEnemies; i++) createEnemy();
+            
+            timeLeft = settings.time;
+            timerDisplay.textContent = formatTime(timeLeft);
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        document.getElementById('start-btn').addEventListener('click', startGame);
+
+        function backToMenu() {
+            gameRunning = false;
+            gameOver = false;
+            victory = false;
+            paused = false;
+            if (timerInterval) clearInterval(timerInterval);
+            hideHUD();
+            gameOverEl.style.display = 'none';
+            victoryEl.style.display = 'none';
+            document.getElementById('menu').style.display = 'flex';
+            if (document.pointerLockElement) document.exitPointerLock();
+        }
+
+        document.getElementById('restart-btn').addEventListener('click', backToMenu);
+        document.getElementById('victory-btn').addEventListener('click', backToMenu);
+
+        pauseBtn.addEventListener('click', () => {
+            if (!gameRunning) return;
+            paused = !paused;
+            pauseBtn.textContent = paused ? '▶' : '⏸';
         });
 
         // ========== ИГРОВОЙ ЦИКЛ ==========
+        const clock = new THREE.Clock();
+
         function animate() {
             requestAnimationFrame(animate);
 
-            if (gameOver) {
+            if (!gameRunning || gameOver || victory || paused) {
                 renderer.render(scene, camera);
                 return;
             }
 
-            const moveSpeed = 0.15;
+            const delta = clock.getDelta();
+            const speedMult = 1 + settings.upgrades.speed * 0.15;
+            const moveSpeed = 0.15 * speedMult;
 
-            // Движение игрока
             if (keys.forward || moveDeltaY < -15) tankGroup.translateZ(-moveSpeed);
             if (keys.backward || moveDeltaY > 15) tankGroup.translateZ(moveSpeed * 0.7);
             if (keys.left || moveDeltaX < -15) tankGroup.rotateY(moveSpeed * 0.08);
@@ -715,7 +1218,6 @@
             tankGroup.position.x = Math.max(-90, Math.min(90, tankGroup.position.x));
             tankGroup.position.z = Math.max(-90, Math.min(90, tankGroup.position.z));
 
-            // Коллизия игрока со зданиями
             for (const pos of buildingPositions) {
                 const dx = tankGroup.position.x - pos.x;
                 const dz = tankGroup.position.z - pos.z;
@@ -731,14 +1233,13 @@
                 }
             }
 
-            // Поворот башни и ствола
             let yawDiff = turretYaw - turretGroup.rotation.y;
             while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
             while (yawDiff < -Math.PI) yawDiff += Math.PI * 2;
             turretGroup.rotation.y += yawDiff * 0.35;
             barrelGroup.rotation.x += (barrelPitch - barrelGroup.rotation.x) * 0.35;
 
-            // Пульки
+            // Пульки игрока
             for (let i = bullets.length - 1; i >= 0; i--) {
                 const bullet = bullets[i];
                 bullet.position.add(bullet.userData.velocity);
@@ -748,7 +1249,7 @@
                 for (let j = enemies.length - 1; j >= 0; j--) {
                     const enemy = enemies[j];
                     if (bullet.position.distanceTo(enemy.position) < 2.5) {
-                        enemy.userData.health--;
+                        enemy.userData.health -= bullet.userData.damage;
                         hit = true;
                         
                         if (enemy.userData.health <= 0) {
@@ -758,9 +1259,10 @@
                             killCountEl.textContent = kills;
                             updateEnemyCounter();
                             
-                            setTimeout(() => {
-                                if (!gameOver && enemies.length < MAX_ENEMIES) createEnemy();
-                            }, RESPAWN_DELAY);
+                            // ===== ПОБЕДА при уничтожении ВСЕХ врагов =====
+                            if (enemies.length === 0) {
+                                endGameVictory('Все вражеские танки уничтожены!');
+                            }
                         }
                         break;
                     }
@@ -775,36 +1277,63 @@
                 }
             }
 
-            // ========== ВРАГИ ЕДУТ К ИГРОКУ ==========
+            // Снаряды врагов
+            for (let i = enemyBullets.length - 1; i >= 0; i--) {
+                const bullet = enemyBullets[i];
+                bullet.position.add(bullet.userData.velocity);
+                bullet.userData.life--;
+
+                const distToPlayer = bullet.position.distanceTo(tankGroup.position);
+                if (distToPlayer < 2.2) {
+                    damagePlayer(bullet.userData.damage);
+                    scene.remove(bullet);
+                    enemyBullets.splice(i, 1);
+                    continue;
+                }
+
+                let hitBuilding = false;
+                for (const pos of buildingPositions) {
+                    if (bullet.position.y < pos.height &&
+                        Math.abs(bullet.position.x - pos.x) < pos.width / 2 &&
+                        Math.abs(bullet.position.z - pos.z) < pos.depth / 2) {
+                        hitBuilding = true;
+                        break;
+                    }
+                }
+
+                if (hitBuilding || bullet.userData.life <= 0 || 
+                    Math.abs(bullet.position.x) > 100 || 
+                    Math.abs(bullet.position.z) > 100 ||
+                    bullet.position.y < 0) {
+                    scene.remove(bullet);
+                    enemyBullets.splice(i, 1);
+                }
+            }
+
+            // Враги
             const playerPos = tankGroup.position;
 
             for (const enemy of enemies) {
-                // Вектор от врага к игроку
                 const dx = playerPos.x - enemy.position.x;
                 const dz = playerPos.z - enemy.position.z;
                 const distToPlayer = Math.sqrt(dx * dx + dz * dz);
 
-                // Поворот корпуса в сторону игрока
-                const targetAngle = Math.atan2(dx, dz);
+                if (distToPlayer > 2.5) {
+                    const nx = dx / distToPlayer;
+                    const nz = dz / distToPlayer;
+                    enemy.position.x += nx * enemy.userData.speed;
+                    enemy.position.z += nz * enemy.userData.speed;
+                }
+
+                const targetAngle = Math.atan2(dx, dz) + Math.PI;
                 let angleDiff = targetAngle - enemy.rotation.y;
                 while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
                 while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-                enemy.rotation.y += angleDiff * 0.05;
+                enemy.rotation.y += angleDiff * 0.08;
 
-                // ЕДЕМ К ИГРОКУ.
-                // Нос танка смотрит в локальный -Z.
-                // rotateY(atan2(dx, dz)) поворачивает нос так, что он смотрит на игрока.
-                // translateZ(+speed) двигает вдоль локального +Z = вперёд кормы,
-                // т.е. носом вперёд = К игроку.
-                if (distToPlayer > 2.5) {
-                    enemy.translateZ(enemy.userData.speed);
-                }
-
-                // Ограничения карты
                 enemy.position.x = Math.max(-90, Math.min(90, enemy.position.x));
                 enemy.position.z = Math.max(-90, Math.min(90, enemy.position.z));
 
-                // Выталкивание из зданий
                 for (const pos of buildingPositions) {
                     const edx = enemy.position.x - pos.x;
                     const edz = enemy.position.z - pos.z;
@@ -820,43 +1349,25 @@
                     }
                 }
 
-                // Урон игроку при контакте
+                enemy.userData.fireCooldown--;
+                if (enemy.userData.fireCooldown <= 0 && distToPlayer < 45 && distToPlayer > 3) {
+                    enemyFire(enemy);
+                    enemy.userData.fireCooldown = enemy.userData.fireRate * (0.6 + Math.random() * 0.8);
+                }
+
                 if (distToPlayer < 3) {
-                    playerHealth -= 0.3;
-                    if (playerHealth < 0) playerHealth = 0;
-                    healthFill.style.width = playerHealth + '%';
-                    
-                    if (playerHealth <= 0 && !gameOver) {
-                        gameOver = true;
-                        finalKillsEl.textContent = kills;
-                        gameOverEl.style.display = 'block';
-                    }
-                }
-
-                // Враги стреляют
-                if (Math.random() < 0.003 && distToPlayer < 35) {
-                    if (Math.random() < 0.4) {
-                        playerHealth -= 3;
-                        if (playerHealth < 0) playerHealth = 0;
-                        healthFill.style.width = playerHealth + '%';
-                        
-                        if (playerHealth <= 0 && !gameOver) {
-                            gameOver = true;
-                            finalKillsEl.textContent = kills;
-                            gameOverEl.style.display = 'block';
-                        }
-                    }
+                    damagePlayer(0.3);
                 }
             }
 
-            // Регенерация игрока
-            if (playerHealth < 100 && Math.random() < 0.01) {
-                playerHealth = Math.min(100, playerHealth + 1);
-                healthFill.style.width = playerHealth + '%';
+            if (playerHealth < playerMaxHealth && Math.random() < 0.005) {
+                playerHealth = Math.min(playerMaxHealth, playerHealth + 1);
+                healthFill.style.width = (playerHealth / playerMaxHealth * 100) + '%';
             }
 
-            healthFill.style.background = playerHealth > 60 ? '#00ff00' : 
-                                           playerHealth > 30 ? '#ffaa00' : '#ff3333';
+            const hpPercent = playerHealth / playerMaxHealth * 100;
+            healthFill.style.background = hpPercent > 60 ? '#00ff00' : 
+                                           hpPercent > 30 ? '#ffaa00' : '#ff3333';
 
             renderer.render(scene, camera);
         }
