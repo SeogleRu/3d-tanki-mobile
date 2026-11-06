@@ -16,7 +16,7 @@
         }
         #game-canvas { display: block; }
 
-        /* ========== МЕНЮ (оптимизировано) ========== */
+        /* ========== МЕНЮ ========== */
         #menu {
             position: fixed;
             top: 0; left: 0;
@@ -39,11 +39,123 @@
             font-weight: bold;
             color: #00ff88;
             text-align: center;
-            margin: 10px 0 18px 0;
+            margin: 8px 0 12px 0;
             letter-spacing: 2px;
-            /* убран animation — вместо него статичное свечение через text-shadow */
             text-shadow: 0 0 12px rgba(0, 255, 136, 0.7);
-            will-change: auto;
+        }
+
+        .profile-section {
+            width: 100%;
+            max-width: 520px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 2px solid rgba(0, 255, 136, 0.4);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .rank-icon { font-size: 36px; line-height: 1; flex-shrink: 0; }
+        .rank-info { flex: 1; min-width: 0; }
+        .rank-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #00ff88;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .rank-stats { font-size: 11px; color: #aaa; line-height: 1.4; }
+        .rank-progress {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+        .rank-progress-fill {
+            height: 100%;
+            background: #00ff88;
+            transition: width 0.3s;
+        }
+
+        .achievements-btn {
+            width: 100%;
+            max-width: 520px;
+            padding: 12px;
+            background: rgba(255, 200, 0, 0.15);
+            border: 2px solid rgba(255, 200, 0, 0.5);
+            border-radius: 10px;
+            color: #ffc800;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 12px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        .achievements-btn:active { background: rgba(255, 200, 0, 0.3); }
+
+        #achievements-panel {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(10, 10, 20, 0.98);
+            z-index: 1100;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            padding: 20px 15px;
+        }
+        #achievements-panel .panel-title {
+            font-size: 24px;
+            color: #ffc800;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .ach-item {
+            width: 100%;
+            max-width: 520px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .ach-item.unlocked {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: rgba(0, 255, 136, 0.4);
+        }
+        .ach-item.locked { opacity: 0.6; }
+        .ach-icon { font-size: 28px; line-height: 1; flex-shrink: 0; }
+        .ach-info { flex: 1; min-width: 0; }
+        .ach-name {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 3px;
+            color: #fff;
+        }
+        .ach-item.unlocked .ach-name { color: #00ff88; }
+        .ach-desc { font-size: 11px; color: #aaa; line-height: 1.4; }
+        #ach-back-btn {
+            padding: 12px 30px;
+            background: #00cc66;
+            border: none;
+            border-radius: 10px;
+            color: #0a0a0a;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-bottom: 20px;
         }
 
         .menu-section {
@@ -54,9 +166,7 @@
             border-radius: 10px;
             padding: 12px;
             margin-bottom: 12px;
-            /* Убираем backdrop-filter — сильно тормозит на телефонах */
         }
-
         .section-title {
             font-size: 13px;
             color: #00ff88;
@@ -65,13 +175,7 @@
             margin-bottom: 10px;
             font-weight: bold;
         }
-
-        .options-row {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
+        .options-row { display: flex; gap: 6px; flex-wrap: wrap; }
         .option-btn {
             flex: 1;
             min-width: 70px;
@@ -101,7 +205,6 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
         .upgrade-row:last-child { border-bottom: none; }
-
         .upgrade-info {
             display: flex;
             flex-direction: column;
@@ -109,16 +212,8 @@
             flex: 1;
             min-width: 0;
         }
-        .upgrade-name {
-            font-size: 13px;
-            font-weight: bold;
-            color: #fff;
-        }
-        .upgrade-desc {
-            font-size: 10px;
-            color: #999;
-        }
-
+        .upgrade-name { font-size: 13px; font-weight: bold; color: #fff; }
+        .upgrade-desc { font-size: 10px; color: #999; }
         .upgrade-controls {
             display: flex;
             align-items: center;
@@ -171,12 +266,31 @@
             cursor: pointer;
             margin-top: 6px;
             margin-bottom: 15px;
-            /* убран градиент + box-shadow glow для плавности */
             transition: background 0.12s;
         }
         #start-btn:active { background: #00aa55; }
 
-        /* ========== ИГРОВОЙ HUD ========== */
+        #notification {
+            position: fixed;
+            top: 20px; left: 50%;
+            transform: translateX(-50%) translateY(-120px);
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #ffc800;
+            border-radius: 12px;
+            padding: 14px 24px;
+            color: #ffc800;
+            font-weight: bold;
+            font-size: 15px;
+            z-index: 1500;
+            text-align: center;
+            transition: transform 0.4s ease;
+            max-width: 90%;
+            pointer-events: none;
+        }
+        #notification.show { transform: translateX(-50%) translateY(0); }
+        #notification.rank-up { border-color: #00ff88; color: #00ff88; }
+
+        /* HUD */
         #info {
             position: absolute;
             top: 10px; left: 10px;
@@ -203,10 +317,7 @@
             display: none;
             border: 2px solid rgba(0, 255, 136, 0.4);
         }
-        #timer-display.warning {
-            color: #ff3333;
-            border-color: #ff3333;
-        }
+        #timer-display.warning { color: #ff3333; border-color: #ff3333; }
         #enemy-counter {
             position: absolute;
             top: 10px; right: 160px;
@@ -415,14 +526,48 @@
             justify-content: center;
         }
         #pause-btn:active { background: rgba(0,0,0,0.9); }
+
+        /* Кнопка звука */
+        #sound-toggle {
+            position: absolute;
+            top: 10px; right: 60px;
+            width: 40px; height: 40px;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 50%;
+            color: white;
+            font-size: 18px;
+            z-index: 101;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #sound-toggle:active { background: rgba(0,0,0,0.9); }
+        #sound-toggle.muted { color: #ff6666; border-color: #ff6666; }
     </style>
 </head>
 <body>
     <canvas id="game-canvas"></canvas>
 
+    <div id="notification"></div>
+
     <!-- МЕНЮ -->
     <div id="menu">
         <div class="menu-title">3D ТАНКИ MOBILE: X</div>
+
+        <div class="profile-section">
+            <div class="rank-icon" id="rank-icon">🎖</div>
+            <div class="rank-info">
+                <div class="rank-name" id="rank-name">Рядовой</div>
+                <div class="rank-stats" id="rank-stats">Побед: 0 · Уничтожено: 0</div>
+                <div class="rank-progress">
+                    <div class="rank-progress-fill" id="rank-progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <button class="achievements-btn" id="achievements-btn">🏅 ДОСТИЖЕНИЯ (<span id="ach-count">0</span>/<span id="ach-total">0</span>)</button>
 
         <div class="menu-section">
             <div class="section-title">⏱ Время боя</div>
@@ -494,6 +639,13 @@
         <button id="start-btn">НАЧАТЬ БОЙ!</button>
     </div>
 
+    <!-- ПАНЕЛЬ ДОСТИЖЕНИЙ -->
+    <div id="achievements-panel">
+        <div class="panel-title">🏅 ДОСТИЖЕНИЯ</div>
+        <div id="achievements-list"></div>
+        <button id="ach-back-btn">НАЗАД</button>
+    </div>
+
     <!-- HUD -->
     <div id="timer-display">02:00</div>
     <div id="info">🏆 Уничтожено: <span id="kill-count">0</span></div>
@@ -502,6 +654,7 @@
     <div id="crosshair"><div class="dot"></div></div>
     <div id="damage-flash"></div>
     <button id="pause-btn">⏸</button>
+    <button id="sound-toggle" title="Звук">🔊</button>
 
     <div id="scope-overlay">
         <div class="scope-circle"></div>
@@ -530,6 +683,17 @@
         <button id="victory-btn">В МЕНЮ</button>
     </div>
 
+    <!-- АУДИО -->
+    <audio id="audio-battle" loop preload="auto">
+        <source src="https://seogleru.github.io/3d-tanki-mobile/%D0%9C%D0%BE%D1%8F%20%D0%BC%D0%B5%D0%BB%D0%BE%D0%B4%D0%B8%D1%8F.mp3.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="audio-victory" preload="auto">
+        <source src="https://seogleru.github.io/3d-tanki-mobile/%D0%94%D1%80%D0%B5%D0%BB%D1%8C%20%D1%87%D1%83%D0%BC%D0%BE%D0%B2%D0%BE%D0%B9%20%D0%B8%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82.mp3.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="audio-defeat" preload="auto">
+        <source src="https://seogleru.github.io/3d-tanki-mobile/%D0%9C%D0%BE%D1%8F%20%D0%BC%D0%B5%D0%BB%D0%BE%D0%B4%D0%B8%D1%8F.mp3(1).mp3" type="audio/mpeg">
+    </audio>
+
     <script type="importmap">
         {
             "imports": {
@@ -541,18 +705,292 @@
     <script type="module">
         import * as THREE from 'three';
 
-        // ========== НАСТРОЙКИ ==========
-        const settings = {
-            time: 120,
-            difficulty: 'normal',
-            upgrades: { armor: 0, speed: 0, damage: 0, rate: 0 }
+        // ============================================================
+        // СИСТЕМА ЗВУКОВ
+        // ============================================================
+        const audioBattle = document.getElementById('audio-battle');
+        const audioVictory = document.getElementById('audio-victory');
+        const audioDefeat = document.getElementById('audio-defeat');
+
+        // Базовая громкость
+        audioBattle.volume = 0.4;
+        audioVictory.volume = 0.7;
+        audioDefeat.volume = 0.6;
+
+        let soundEnabled = true;
+        const soundToggle = document.getElementById('sound-toggle');
+
+        function stopAllAudio() {
+            audioBattle.pause();
+            audioBattle.currentTime = 0;
+            audioVictory.pause();
+            audioVictory.currentTime = 0;
+            audioDefeat.pause();
+            audioDefeat.currentTime = 0;
+        }
+
+        function playBattleMusic() {
+            if (!soundEnabled) return;
+            stopAllAudio();
+            audioBattle.play().catch(err => {
+                // Браузер может блокировать — это нормально
+                console.warn('Не удалось запустить музыку боя:', err);
+            });
+        }
+
+        function playVictorySound() {
+            if (!soundEnabled) return;
+            audioBattle.pause();
+            audioVictory.currentTime = 0;
+            audioVictory.play().catch(err => {
+                console.warn('Не удалось запустить звук победы:', err);
+            });
+        }
+
+        function playDefeatSound() {
+            if (!soundEnabled) return;
+            audioBattle.pause();
+            audioDefeat.currentTime = 0;
+            audioDefeat.play().catch(err => {
+                console.warn('Не удалось запустить звук поражения:', err);
+            });
+        }
+
+        // Переключатель звука
+        soundToggle.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            if (soundEnabled) {
+                soundToggle.textContent = '🔊';
+                soundToggle.classList.remove('muted');
+                // Если идёт бой — возобновляем
+                if (gameRunning && !gameOver && !victory) {
+                    audioBattle.play().catch(() => {});
+                }
+            } else {
+                soundToggle.textContent = '🔇';
+                soundToggle.classList.add('muted');
+                audioBattle.pause();
+                audioVictory.pause();
+                audioDefeat.pause();
+            }
+        });
+
+        // ============================================================
+        // СИСТЕМА ЗВАНИЙ
+        // ============================================================
+        const RANKS = [
+            { name: 'Рядовой',        icon: '🎖',  wins: 0 },
+            { name: 'Ефрейтор',       icon: '🎗',  wins: 3 },
+            { name: 'Младший сержант',icon: '🥉',  wins: 7 },
+            { name: 'Сержант',        icon: '🥈',  wins: 12 },
+            { name: 'Старший сержант',icon: '🥇',  wins: 20 },
+            { name: 'Старшина',       icon: '⭐',  wins: 30 },
+            { name: 'Прапорщик',      icon: '🌟',  wins: 45 },
+            { name: 'Лейтенант',      icon: '💫',  wins: 65 },
+            { name: 'Старший лейтенант', icon: '✨', wins: 90 },
+            { name: 'Капитан',        icon: '🔰',  wins: 120 },
+            { name: 'Майор',          icon: '🏆',  wins: 160 },
+            { name: 'Подполковник',   icon: '👑',  wins: 220 },
+            { name: 'Полковник',      icon: '💎',  wins: 300 },
+            { name: 'Генерал',        icon: '🔥',  wins: 400 },
+            { name: 'Маршал',         icon: '🌠',  wins: 550 },
+            { name: 'Генералиссимус', icon: '🏛',  wins: 800 }
+        ];
+
+        const ACHIEVEMENTS = [
+            { id: 'first_win',    icon: '🥇', name: 'Первая победа',       desc: 'Одержать первую победу' },
+            { id: 'wins_5',       icon: '🏅', name: 'Ветеран',             desc: 'Победить 5 раз' },
+            { id: 'wins_15',      icon: '🎖', name: 'Опытный боец',        desc: 'Победить 15 раз' },
+            { id: 'wins_50',      icon: '👑', name: 'Легенда',             desc: 'Победить 50 раз' },
+            { id: 'kills_100',    icon: '💀', name: 'Гроза танков',        desc: 'Уничтожить 100 врагов' },
+            { id: 'kills_500',    icon: '☠', name: 'Истребитель',          desc: 'Уничтожить 500 врагов' },
+            { id: 'kills_1000',   icon: '🔥', name: 'Машина смерти',       desc: 'Уничтожить 1000 врагов' },
+            { id: 'hard_win',     icon: '⚔', name: 'Несгибаемый',         desc: 'Победить на "Сложно"' },
+            { id: 'flawless',     icon: '🛡', name: 'Без единой царапины', desc: 'Победить без урона' },
+            { id: 'speedrun',     icon: '⚡', name: 'Молниеносный',        desc: 'Победить за 1 минуту' },
+            { id: 'kills_match_20', icon: '🎯', name: 'Мясорубка',         desc: '20 убийств за бой' },
+            { id: 'max_rank',     icon: '🏛', name: 'Генералиссимус',      desc: 'Высшее звание' }
+        ];
+
+        const STORAGE_KEY = 'tanki_mobile_x_save_v1';
+
+        const defaultSave = {
+            wins: 0,
+            totalKills: 0,
+            battlesPlayed: 0,
+            bestKillsMatch: 0,
+            achievements: [],
+            settings: {
+                time: 120,
+                difficulty: 'normal',
+                upgrades: { armor: 0, speed: 0, damage: 0, rate: 0 }
+            }
         };
+
+        function loadSave() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return { ...defaultSave, settings: { ...defaultSave.settings, upgrades: { ...defaultSave.settings.upgrades } } };
+                const data = JSON.parse(raw);
+                return {
+                    wins: data.wins || 0,
+                    totalKills: data.totalKills || 0,
+                    battlesPlayed: data.battlesPlayed || 0,
+                    bestKillsMatch: data.bestKillsMatch || 0,
+                    achievements: Array.isArray(data.achievements) ? data.achievements : [],
+                    settings: {
+                        time: data.settings?.time || 120,
+                        difficulty: data.settings?.difficulty || 'normal',
+                        upgrades: {
+                            armor: data.settings?.upgrades?.armor || 0,
+                            speed: data.settings?.upgrades?.speed || 0,
+                            damage: data.settings?.upgrades?.damage || 0,
+                            rate: data.settings?.upgrades?.rate || 0
+                        }
+                    }
+                };
+            } catch (e) {
+                console.warn('Ошибка загрузки сохранения:', e);
+                return { ...defaultSave, settings: { ...defaultSave.settings, upgrades: { ...defaultSave.settings.upgrades } } };
+            }
+        }
+
+        function writeSave(data) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            } catch (e) {
+                console.warn('Ошибка сохранения:', e);
+            }
+        }
+
+        const save = loadSave();
+        const settings = save.settings;
+
+        function getRankIndex(wins) {
+            let idx = 0;
+            for (let i = 0; i < RANKS.length; i++) {
+                if (wins >= RANKS[i].wins) idx = i;
+            }
+            return idx;
+        }
+
+        function getRankProgress(wins) {
+            const idx = getRankIndex(wins);
+            if (idx >= RANKS.length - 1) return 1;
+            const cur = RANKS[idx].wins;
+            const next = RANKS[idx + 1].wins;
+            return (wins - cur) / (next - cur);
+        }
+
+        function updateRankUI() {
+            const idx = getRankIndex(save.wins);
+            const rank = RANKS[idx];
+            document.getElementById('rank-icon').textContent = rank.icon;
+            document.getElementById('rank-name').textContent = rank.name;
+            document.getElementById('rank-stats').textContent =
+                `Побед: ${save.wins} · Уничтожено: ${save.totalKills} · Боёв: ${save.battlesPlayed}`;
+            const progress = getRankProgress(save.wins);
+            document.getElementById('rank-progress-fill').style.width = (progress * 100) + '%';
+        }
+
+        function checkRankUp(prevWins, newWins) {
+            const prevIdx = getRankIndex(prevWins);
+            const newIdx = getRankIndex(newWins);
+            if (newIdx > prevIdx) {
+                const rank = RANKS[newIdx];
+                showNotification(`${rank.icon} НОВОЕ ЗВАНИЕ: ${rank.name}!`, true);
+            }
+        }
+
+        const notifEl = document.getElementById('notification');
+        let notifTimer = null;
+        function showNotification(text, isRankUp = false) {
+            notifEl.textContent = text;
+            notifEl.classList.toggle('rank-up', isRankUp);
+            notifEl.classList.add('show');
+            if (notifTimer) clearTimeout(notifTimer);
+            notifTimer = setTimeout(() => {
+                notifEl.classList.remove('show');
+            }, 3000);
+        }
+
+        function unlockAchievement(id) {
+            if (save.achievements.includes(id)) return;
+            save.achievements.push(id);
+            writeSave(save);
+            const ach = ACHIEVEMENTS.find(a => a.id === id);
+            if (ach) {
+                showNotification(`${ach.icon} Достижение: ${ach.name}!`);
+            }
+            updateAchievementsUI();
+        }
+
+        function checkAchievements(context) {
+            if (context.isVictory) {
+                if (save.wins >= 1) unlockAchievement('first_win');
+                if (save.wins >= 5) unlockAchievement('wins_5');
+                if (save.wins >= 15) unlockAchievement('wins_15');
+                if (save.wins >= 50) unlockAchievement('wins_50');
+                if (context.difficulty === 'hard') unlockAchievement('hard_win');
+                if (context.healthPercent >= 100) unlockAchievement('flawless');
+                if (context.timeSec === 60 && context.elapsedSec <= 60) unlockAchievement('speedrun');
+                if (getRankIndex(save.wins) === RANKS.length - 1) unlockAchievement('max_rank');
+            }
+            if (save.totalKills >= 100) unlockAchievement('kills_100');
+            if (save.totalKills >= 500) unlockAchievement('kills_500');
+            if (save.totalKills >= 1000) unlockAchievement('kills_1000');
+            if (save.bestKillsMatch >= 20) unlockAchievement('kills_match_20');
+        }
+
+        function updateAchievementsUI() {
+            const list = document.getElementById('achievements-list');
+            list.innerHTML = '';
+            for (const ach of ACHIEVEMENTS) {
+                const unlocked = save.achievements.includes(ach.id);
+                const item = document.createElement('div');
+                item.className = 'ach-item ' + (unlocked ? 'unlocked' : 'locked');
+                item.innerHTML = `
+                    <div class="ach-icon">${unlocked ? ach.icon : '🔒'}</div>
+                    <div class="ach-info">
+                        <div class="ach-name">${ach.name}</div>
+                        <div class="ach-desc">${ach.desc}</div>
+                    </div>
+                `;
+                list.appendChild(item);
+            }
+            document.getElementById('ach-count').textContent = save.achievements.length;
+            document.getElementById('ach-total').textContent = ACHIEVEMENTS.length;
+        }
+
+        document.getElementById('achievements-btn').addEventListener('click', () => {
+            updateAchievementsUI();
+            document.getElementById('achievements-panel').style.display = 'flex';
+        });
+        document.getElementById('ach-back-btn').addEventListener('click', () => {
+            document.getElementById('achievements-panel').style.display = 'none';
+        });
+
+        function initMenuFromSave() {
+            document.querySelectorAll('#time-options .option-btn').forEach(b => {
+                b.classList.toggle('selected', parseInt(b.dataset.time) === settings.time);
+            });
+            document.querySelectorAll('#difficulty-options .option-btn').forEach(b => {
+                b.classList.toggle('selected', b.dataset.diff === settings.difficulty);
+            });
+            for (const key of ['armor', 'speed', 'damage', 'rate']) {
+                document.getElementById('lvl-' + key).textContent = settings.upgrades[key];
+            }
+            updateUpgradeButtons();
+            updateRankUI();
+            updateAchievementsUI();
+        }
 
         document.querySelectorAll('#time-options .option-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('#time-options .option-btn').forEach(b => b.classList.remove('selected'));
                 btn.classList.add('selected');
                 settings.time = parseInt(btn.dataset.time);
+                writeSave(save);
             });
         });
 
@@ -561,6 +999,7 @@
                 document.querySelectorAll('#difficulty-options .option-btn').forEach(b => b.classList.remove('selected'));
                 btn.classList.add('selected');
                 settings.difficulty = btn.dataset.diff;
+                writeSave(save);
             });
         });
 
@@ -574,6 +1013,7 @@
                     settings.upgrades[upg] = newVal;
                     document.getElementById('lvl-' + upg).textContent = newVal;
                     updateUpgradeButtons();
+                    writeSave(save);
                 }
             });
         });
@@ -586,9 +1026,10 @@
                 btn.disabled = (dir === -1 && val === 0) || (dir === 1 && val === MAX_UPGRADE);
             });
         }
-        updateUpgradeButtons();
 
-        // ========== СЦЕНА ==========
+        // ============================================================
+        // СЦЕНА
+        // ============================================================
         const canvas = document.getElementById('game-canvas');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x87CEEB);
@@ -600,14 +1041,12 @@
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = false;
 
-        // Свет
         scene.add(new THREE.AmbientLight(0xffffff, 0.7));
         const dirLight = new THREE.DirectionalLight(0xfff5e6, 1.2);
         dirLight.position.set(50, 80, 30);
         scene.add(dirLight);
         scene.add(new THREE.HemisphereLight(0x87CEEB, 0x4a4a4a, 0.6));
 
-        // Земля
         const ground = new THREE.Mesh(
             new THREE.PlaneGeometry(200, 200),
             new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.9 })
@@ -625,7 +1064,6 @@
             scene.add(patch);
         }
 
-        // ========== ГОРОД ==========
         const buildingColors = [0x8a8a8a, 0x7a7a7a, 0x9a8a7a, 0x6a6a6a, 0x8a7a6a];
         const buildingPositions = [];
 
@@ -689,7 +1127,7 @@
             scene.add(debris);
         }
 
-        // ========== ТАНК ИГРОКА ==========
+        // Танк игрока
         const tankGroup = new THREE.Group();
         scene.add(tankGroup);
 
@@ -730,7 +1168,7 @@
         camera.rotation.order = 'YXZ';
         barrelGroup.add(camera);
 
-        // ========== УПРАВЛЕНИЕ ==========
+        // Управление
         const keys = { forward: false, backward: false, left: false, right: false };
         let turretYaw = 0;
         let barrelPitch = 0;
@@ -873,7 +1311,6 @@
             camera.updateProjectionMatrix();
         }
 
-        // ========== СТРЕЛЬБА ==========
         const bullets = [];
         const bulletGeometry = new THREE.SphereGeometry(0.15, 6, 6);
         const bulletMaterial = new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0xff4400 });
@@ -908,7 +1345,6 @@
             bullets.push(bullet);
         }
 
-        // ========== СНАРЯДЫ ВРАГОВ ==========
         const enemyBullets = [];
         const enemyBulletGeo = new THREE.SphereGeometry(0.22, 6, 6);
         const enemyBulletMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xaa0000 });
@@ -947,17 +1383,13 @@
             enemyBullets.push(bullet);
         }
 
-        // ========== СЛОЖНОСТЬ ==========
         const DIFFICULTY = {
             easy:   { enemySpeed: 0.6,  enemyHealth: 2, enemyDamage: 5,  accuracy: 0.15, enemyCount: 10, fireRate: 1.6 },
             normal: { enemySpeed: 1.0,  enemyHealth: 3, enemyDamage: 8,  accuracy: 0.06, enemyCount: 15, fireRate: 1.0 },
             hard:   { enemySpeed: 1.5,  enemyHealth: 4, enemyDamage: 12, accuracy: 0.03, enemyCount: 20, fireRate: 0.6 }
         };
 
-        // ========== ВРАГИ ==========
         const enemies = [];
-        let totalEnemies = 0;
-
         const enemyBodyGeo = new THREE.BoxGeometry(2.2, 0.8, 3.5);
         const enemyTurretGeo = new THREE.BoxGeometry(1.5, 0.6, 1.5);
         const enemyBarrelGeo = new THREE.CylinderGeometry(0.12, 0.12, 2.5, 6);
@@ -1020,7 +1452,6 @@
             document.getElementById('enemy-count').textContent = enemies.length;
         }
 
-        // ========== ЭФФЕКТ УРОНА ==========
         const damageFlash = document.getElementById('damage-flash');
         let flashTimeout = null;
 
@@ -1032,7 +1463,6 @@
             }, 120);
         }
 
-        // ========== СОСТОЯНИЕ ИГРЫ ==========
         let playerHealth = 100;
         let playerMaxHealth = 100;
         let kills = 0;
@@ -1067,29 +1497,70 @@
         }
 
         function endGameDefeat() {
+            if (gameOver || victory) return;
             gameOver = true;
             gameRunning = false;
             if (timerInterval) clearInterval(timerInterval);
+            
+            const prevWins = save.wins;
+            save.battlesPlayed++;
+            save.totalKills += kills;
+            if (kills > save.bestKillsMatch) save.bestKillsMatch = kills;
+            writeSave(save);
+            
             finalKillsEl.textContent = kills;
             gameOverEl.style.display = 'block';
             hideHUD();
             if (document.pointerLockElement) document.exitPointerLock();
+            
+            // Воспроизводим звук поражения
+            playDefeatSound();
+            
+            checkAchievements({ isVictory: false });
+            updateRankUI();
         }
 
         function endGameVictory(reason) {
+            if (gameOver || victory) return;
             victory = true;
             gameRunning = false;
             if (timerInterval) clearInterval(timerInterval);
+            
+            const prevWins = save.wins;
+            save.wins++;
+            save.battlesPlayed++;
+            save.totalKills += kills;
+            if (kills > save.bestKillsMatch) save.bestKillsMatch = kills;
+            writeSave(save);
+            
+            const elapsedSec = settings.time - timeLeft;
+            const healthPercent = playerHealth / playerMaxHealth * 100;
+            
             victoryReasonEl.textContent = reason;
             victoryKillsEl.textContent = kills;
-            victoryHealthEl.textContent = Math.round(playerHealth / playerMaxHealth * 100);
+            victoryHealthEl.textContent = Math.round(healthPercent);
             victoryEl.style.display = 'block';
             hideHUD();
             if (document.pointerLockElement) document.exitPointerLock();
+            
+            // Воспроизводим звук победы
+            playVictorySound();
+            
+            checkRankUp(prevWins, save.wins);
+            
+            checkAchievements({
+                isVictory: true,
+                kills: kills,
+                healthPercent: healthPercent,
+                difficulty: settings.difficulty,
+                timeSec: settings.time,
+                elapsedSec: elapsedSec
+            });
+            updateRankUI();
         }
 
         function hideHUD() {
-            ['info','enemy-counter','health-bar','crosshair','controls','scope-btn','timer-display','pause-btn'].forEach(id => {
+            ['info','enemy-counter','health-bar','crosshair','controls','scope-btn','timer-display','pause-btn','sound-toggle'].forEach(id => {
                 document.getElementById(id).style.display = 'none';
             });
         }
@@ -1103,6 +1574,7 @@
             document.getElementById('scope-btn').style.display = 'flex';
             document.getElementById('timer-display').style.display = 'block';
             document.getElementById('pause-btn').style.display = 'flex';
+            document.getElementById('sound-toggle').style.display = 'flex';
         }
 
         function formatTime(sec) {
@@ -1123,10 +1595,12 @@
             }
         }
 
-        // ========== СТАРТ ИГРЫ ==========
         function startGame() {
             document.getElementById('menu').style.display = 'none';
             showHUD();
+            
+            // Запускаем музыку боя (по клику пользователя — это разрешено)
+            playBattleMusic();
             
             playerMaxHealth = 100 + settings.upgrades.armor * 20;
             playerHealth = playerMaxHealth;
@@ -1162,8 +1636,8 @@
             turretGroup.rotation.set(0, 0, 0);
             barrelGroup.rotation.set(0, 0, 0);
             
-            totalEnemies = DIFFICULTY[settings.difficulty].enemyCount;
-            for (let i = 0; i < totalEnemies; i++) createEnemy();
+            const count = DIFFICULTY[settings.difficulty].enemyCount;
+            for (let i = 0; i < count; i++) createEnemy();
             
             timeLeft = settings.time;
             timerDisplay.textContent = formatTime(timeLeft);
@@ -1180,10 +1654,13 @@
             paused = false;
             if (timerInterval) clearInterval(timerInterval);
             hideHUD();
+            stopAllAudio();
             gameOverEl.style.display = 'none';
             victoryEl.style.display = 'none';
             document.getElementById('menu').style.display = 'flex';
             if (document.pointerLockElement) document.exitPointerLock();
+            updateRankUI();
+            updateAchievementsUI();
         }
 
         document.getElementById('restart-btn').addEventListener('click', backToMenu);
@@ -1193,9 +1670,16 @@
             if (!gameRunning) return;
             paused = !paused;
             pauseBtn.textContent = paused ? '▶' : '⏸';
+            if (paused) {
+                audioBattle.pause();
+            } else {
+                if (soundEnabled) audioBattle.play().catch(() => {});
+            }
         });
 
-        // ========== ИГРОВОЙ ЦИКЛ ==========
+        // ============================================================
+        // ИГРОВОЙ ЦИКЛ
+        // ============================================================
         const clock = new THREE.Clock();
 
         function animate() {
@@ -1239,7 +1723,6 @@
             turretGroup.rotation.y += yawDiff * 0.35;
             barrelGroup.rotation.x += (barrelPitch - barrelGroup.rotation.x) * 0.35;
 
-            // Пульки игрока
             for (let i = bullets.length - 1; i >= 0; i--) {
                 const bullet = bullets[i];
                 bullet.position.add(bullet.userData.velocity);
@@ -1259,7 +1742,6 @@
                             killCountEl.textContent = kills;
                             updateEnemyCounter();
                             
-                            // ===== ПОБЕДА при уничтожении ВСЕХ врагов =====
                             if (enemies.length === 0) {
                                 endGameVictory('Все вражеские танки уничтожены!');
                             }
@@ -1277,7 +1759,6 @@
                 }
             }
 
-            // Снаряды врагов
             for (let i = enemyBullets.length - 1; i >= 0; i--) {
                 const bullet = enemyBullets[i];
                 bullet.position.add(bullet.userData.velocity);
@@ -1310,7 +1791,6 @@
                 }
             }
 
-            // Враги
             const playerPos = tankGroup.position;
 
             for (const enemy of enemies) {
@@ -1379,6 +1859,7 @@
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         });
 
+        initMenuFromSave();
         animate();
     </script>
 </body>
